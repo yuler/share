@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="paper">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>静态分享站 MVP 架构设计</title>
+  <meta name="description" content="基于 GitHub Pages 的极简静态分享站：不依赖后端，通过 CSS 变量定制，AI 自动化生成。">
+  <meta property="og:title" content="静态分享站 MVP 架构设计">
+  <meta property="og:description" content="基于 GitHub Pages 的极简静态分享站：不依赖后端，通过 CSS 变量定制，AI 自动化生成。">
+  <link rel="stylesheet" href="../../assets/share.css">
+  <script src="../../assets/share.js" defer></script>
+</head>
+<body>
+  <main class="page">
+    <header class="meta">
+      <h1>静态分享站 MVP 架构设计</h1>
+      <p><time datetime="2026-11-04">2026-11-04</time> · <span class="tag">architecture</span> <span class="tag">gh-pages</span></p>
+      <p class="lede">基于 GitHub Pages 的极简静态分享方案：无需后端、无需构建流程，通过统一的 CSS 变量系统与 AI 协作，随时将对话、想法、代码或媒体文件生成独立分享页。</p>
+    </header>
+
+    <h2>设计原则</h2>
+    <ul>
+      <li><strong>全静态无构建</strong>：Push 即发布，GitHub Pages 直出，1 分钟内全球 CDN 生效。</li>
+      <li><strong>HTML 即媒介</strong>：所有分享形式（文字、对话、代码、多媒体）统一归宿为单一语义化 HTML，天然支持多类型混合。</li>
+      <li><strong>CSS 变量驱动主题</strong>：全站共享 <code>assets/share.css</code>，内置自动深浅色以及 <code>paper</code>、<code>dark</code>、<code>terminal</code> 等主题，支持页面级局部样式微调。</li>
+      <li><strong>端到端 AI 集成</strong>：通过全局 <code>share</code> skill，在任何终端或对话中只要一句话，AI 即自动在 <code>s/YYYY-MM-DD-slug/</code> 目录生成并完成脱敏与部署。</li>
+    </ul>
+
+    <div class="callout" data-kind="tip">
+      <p><strong>隐私与发现性：</strong>首页默认不提供公开索引列表，全站页面注入 <code>noindex</code>，仅通过唯一链接直接触达。</p>
+    </div>
+
+    <h2>目录规约</h2>
+    <pre data-title="directory-structure"><code class="language-text">share/
+├── index.html              # 根占位页（不公开索引）
+├── assets/
+│   ├── share.css           # 统一变量与原子组件库
+│   └── share.js            # 代码高亮与剪贴板复制增强
+├── templates/              # AI 生成骨架（chat / code / media / note）
+└── s/                      # 各独立分享（以日期与语义命名）
+    └── 2026-11-04-slug/
+        └── index.html</code></pre>
+
+    <footer>yuler · shared via <a href="https://github.com/yuler/share">yuler/share</a></footer>
+  </main>
+</body>
+</html>
