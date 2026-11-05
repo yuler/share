@@ -21,7 +21,7 @@
 
     <h1>Google Colab (Colaboratory) 调研与使用指南</h1>
 <ul>
-<li>官网: https://colab.research.google.com/</li>
+<li>官网: <a href="https://colab.research.google.com/">https://colab.research.google.com/</a></li>
 <li>运行环境: 基于云端的 Jupyter Notebook（Google Cloud 托管）</li>
 <li>核心定位: 免配置 Python 环境，提供免费 GPU/TPU 算力，支持云端硬盘联动与协同分享</li>
 </ul>
@@ -82,15 +82,76 @@ print(message)
 <li>此时右上角会重新连接（连接成功后会显示 RAM 和 磁盘 容量进度条）。再在代码块中运行 <code>!nvidia-smi</code>，就能看到分配到的显卡信息。</li>
 </ol>
 <p><strong>加速器对照（显存 + 计算单元）</strong>：Colab 用统一的 compute units 计费（约 <code>$0.10 / unit</code>）；越强的加速器，每小时扣的 units 越多。下表为社区实测快照，会随地区/时段波动，以连接后右上角实际烧点速率为准。</p>
-<p>| Colab 选项      | 实际硬件                     | 显存/容量     | 约 units/hr | 约 $/hr   | 200 units 大约能连 |
-| --------------- | ---------------------------- | ------------- | ----------- | --------- | ------------------ |
-| T4 GPU          | NVIDIA T4                    | ~15 GB        | 1.19        | ~$0.12    | ~168h（~7 天）     |
-| L4 GPU          | NVIDIA L4                    | ~22.5 GB      | 1.71        | ~$0.17    | ~117h（~5 天）     |
-| A100 GPU        | NVIDIA A100                  | 40 / 80 GB    | 5.4 / 7.5   | ~$0.54 / $0.75 | ~37h / ~27h   |
-| G4 GPU          | RTX PRO 6000 Blackwell       | ~96 GB        | ~8.7        | ~$0.87    | ~23h               |
-| H100 GPU        | NVIDIA H100                  | ~80 GB        | ~18         | ~$1.80    | ~11h               |
-| v5e-1 TPU       | TPU v5e（1 chip）            | HBM（非 GPU） | ~3.1        | ~$0.31    | ~64h               |
-| v6e-1 TPU       | TPU v6e（1 chip）            | HBM（非 GPU） | ~3.7        | ~$0.37    | ~54h               |</p>
+<table>
+<thead>
+<tr>
+<th>Colab 选项</th>
+<th>实际硬件</th>
+<th>显存/容量</th>
+<th>约 units/hr</th>
+<th>约 $/hr</th>
+<th>200 units 大约能连</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T4 GPU</td>
+<td>NVIDIA T4</td>
+<td>~15 GB</td>
+<td>1.19</td>
+<td>~$0.12</td>
+<td>~168h（~7 天）</td>
+</tr>
+<tr>
+<td>L4 GPU</td>
+<td>NVIDIA L4</td>
+<td>~22.5 GB</td>
+<td>1.71</td>
+<td>~$0.17</td>
+<td>~117h（~5 天）</td>
+</tr>
+<tr>
+<td>A100 GPU</td>
+<td>NVIDIA A100</td>
+<td>40 / 80 GB</td>
+<td>5.4 / 7.5</td>
+<td>~$0.54 / $0.75</td>
+<td>~37h / ~27h</td>
+</tr>
+<tr>
+<td>G4 GPU</td>
+<td>RTX PRO 6000 Blackwell</td>
+<td>~96 GB</td>
+<td>~8.7</td>
+<td>~$0.87</td>
+<td>~23h</td>
+</tr>
+<tr>
+<td>H100 GPU</td>
+<td>NVIDIA H100</td>
+<td>~80 GB</td>
+<td>~18</td>
+<td>~$1.80</td>
+<td>~11h</td>
+</tr>
+<tr>
+<td>v5e-1 TPU</td>
+<td>TPU v5e（1 chip）</td>
+<td>HBM（非 GPU）</td>
+<td>~3.1</td>
+<td>~$0.31</td>
+<td>~64h</td>
+</tr>
+<tr>
+<td>v6e-1 TPU</td>
+<td>TPU v6e（1 chip）</td>
+<td>HBM（非 GPU）</td>
+<td>~3.7</td>
+<td>~$0.37</td>
+<td>~54h</td>
+</tr>
+</tbody>
+</table>
 <blockquote>
 <p><strong>心算</strong>：<code>能用小时数 ≈ 持有 units ÷ 该加速器 units/hr</code>；<code>花费美元 ≈ 用掉的 units × 0.10</code>。例如连 G4 跑 5 小时 ≈ <code>5 × 8.7 ≈ 43.5 units</code> ≈ <strong>$4.4</strong>。A100 的 80GB 版本通常对应 High RAM；G4 在 <code>nvidia-smi</code> 里显示为 RTX PRO 6000。TPU 与 CUDA GPU 生态不同，适合 JAX / 部分 TensorFlow，不一定能直接替代 PyTorch CUDA 流程。</p>
 </blockquote>
@@ -114,13 +175,36 @@ runtime.unassign()
 </li>
 </ul>
 <h4>第七步：常用快捷键速查</h4>
-<p>| 快捷键          | 作用说明                           |
-| --------------- | ---------------------------------- |
-| <code>Shift + Enter</code> | 运行当前单元格，并跳转到下一单元格 |
-| <code>Ctrl + Enter</code>  | 运行当前单元格，光标停留在原地     |
-| <code>Ctrl + M B</code>    | 在当前单元格下方插入新的代码块     |
-| <code>Ctrl + M D</code>    | 连续按两次 D 删除当前选中的单元格  |
-| <code>Ctrl + M M</code>    | 将当前代码块转换为 Markdown 文本块 |</p>
+<table>
+<thead>
+<tr>
+<th>快捷键</th>
+<th>作用说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Shift + Enter</code></td>
+<td>运行当前单元格，并跳转到下一单元格</td>
+</tr>
+<tr>
+<td><code>Ctrl + Enter</code></td>
+<td>运行当前单元格，光标停留在原地</td>
+</tr>
+<tr>
+<td><code>Ctrl + M B</code></td>
+<td>在当前单元格下方插入新的代码块</td>
+</tr>
+<tr>
+<td><code>Ctrl + M D</code></td>
+<td>连续按两次 D 删除当前选中的单元格</td>
+</tr>
+<tr>
+<td><code>Ctrl + M M</code></td>
+<td>将当前代码块转换为 Markdown 文本块</td>
+</tr>
+</tbody>
+</table>
 <hr>
 <h2>2. 进阶与高级用法</h2>
 <p>当你跑通基础代码后，Colab 还提供了以下进阶能力，支持更复杂的开发与工程需求：</p>
