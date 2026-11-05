@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Google Colab 调研与使用指南</title>
+  <meta name="description" content="入门步骤、加速器对照（显存与 compute units）与扣费避坑">
+  <meta property="og:title" content="Google Colab 调研与使用指南">
+  <meta property="og:description" content="入门步骤、加速器对照（显存与 compute units）与扣费避坑">
+  <link rel="stylesheet" href="../../assets/share.css">
+  <script src="../../assets/share.js" defer></script>
+</head>
+<body>
+  <main class="page">
+    <header class="meta">
+      <h1>Google Colab 调研与使用指南</h1>
+      <p><time datetime="2026-11-05">2026-11-05</time> <span class="tag">colab</span> <span class="tag">gpu</span> </p>
+      <p class="lede">入门步骤、加速器对照（显存与 compute units）与扣费避坑</p>
+    </header>
+
+    <h1>Google Colab (Colaboratory) 调研与使用指南</h1>
+<ul>
+<li>官网: <a href="https://colab.research.google.com/">https://colab.research.google.com/</a></li>
+<li>运行环境: 基于云端的 Jupyter Notebook（Google Cloud 托管）</li>
+<li>核心定位: 免配置 Python 环境，提供免费 GPU/TPU 算力，支持云端硬盘联动与协同分享</li>
+</ul>
+<hr>
+<h2>1. 入门指南（小白实践篇）</h2>
+<p>Google Colab 是 Google 推出的一款在线交互式编程工具。简单来说，它就像一个**「云端版的 Python 笔记本」**——你不需要在自己电脑上安装 Python、配置环境变量或安装显卡驱动，只要打开浏览器就能直接写代码并运行，甚至还能免费使用 Google 提供的云端 GPU 显卡。</p>
+<h3>实践步骤</h3>
+<h4>第一步：打开并新建笔记本</h4>
+<ol>
+<li>准备一个 Google 账号（Gmail），确保网络能正常访问 Google 服务。</li>
+<li>在浏览器中打开 <a href="https://colab.research.google.com/">colab.research.google.com</a>。</li>
+<li>首次进入会弹出一个欢迎弹窗，点击右下角的 <strong>「新建笔记本」</strong>（New Notebook）。</li>
+<li>页面会生成一个未命名的 <code>.ipynb</code> 文件（你可以点击左上角文件名重命名，例如 <code>my_first_colab.ipynb</code>）。</li>
+</ol>
+<h4>第二步：认识界面与单元格（Cell）</h4>
+<p>Colab 页面主要由一个个矩形的「单元格」拼接而成，分为两种基本类型：</p>
+<ul>
+<li><strong>代码块（+ 代码）</strong>：用来编写和运行 Python 代码。</li>
+<li><strong>文本块（+ 文本）</strong>：用来写 Markdown 说明文档、记笔记或放参考图。</li>
+<li>鼠标悬停在两个单元格之间，就会浮现 <code>+ 代码</code> 和 <code>+ 文本</code> 按钮，随时可以插入新块。</li>
+</ul>
+<h4>第三步：写下并运行第一行代码</h4>
+<ol>
+<li>鼠标点击默认生成的第一个代码单元格，输入以下代码：
+<pre><code class="language-python">message = &quot;Hello, Google Colab!&quot;
+print(message)
+</code></pre>
+</li>
+<li>运行代码（两种方法）：
+<ul>
+<li>点击该单元格左侧的圆圈 <strong>播放按钮（▶）</strong>。</li>
+<li>使用最常用的快捷键：按 <strong><code>Shift + Enter</code></strong>（执行当前块，并自动跳转/新建下一块）。</li>
+</ul>
+</li>
+<li>稍等一两秒，单元格下方就会立刻输出打印内容。</li>
+</ol>
+<h4>第四步：执行终端命令与安装三方库</h4>
+<p>Colab 底层是一台完整的 Linux 虚拟机。在命令前加上英文感叹号 <code>!</code>，就能直接执行 Linux Shell 命令：</p>
+<ul>
+<li><strong>安装额外的 Python 库</strong>：
+<pre><code class="language-bash">!pip install numpy pandas matplotlib
+</code></pre>
+</li>
+<li><strong>查看分配到的硬件配置</strong>：
+<pre><code class="language-bash">!nvidia-smi
+</code></pre>
+<blockquote>
+<p><strong>注意</strong>：如果当前处于默认的 CPU 模式，运行该命令会报错 <code>command not found</code>。需完成下一步开启 GPU 后才可查询显卡。</p>
+</blockquote>
+</li>
+</ul>
+<h4>第五步：免费开启 GPU 加速（跑 AI / 深度学习必备）</h4>
+<p>默认情况下 Colab 分配的是普通的 CPU 机器。如果你要运行 AI 模型或做大规模计算，可以免费换成 GPU：</p>
+<ol>
+<li>点击顶部菜单栏的 <strong>「代码执行程序」</strong>（Runtime）-&gt; <strong>「更改运行时类型」</strong>（Change runtime type）。</li>
+<li>在弹出的对话框中，将「硬件加速器」从 <code>CPU</code> 改为 <strong><code>T4 GPU</code></strong>（或下表中的其他加速器；高级卡通常需要付费 compute units）。</li>
+<li>点击 <strong>「保存」</strong>。</li>
+<li>此时右上角会重新连接（连接成功后会显示 RAM 和 磁盘 容量进度条）。再在代码块中运行 <code>!nvidia-smi</code>，就能看到分配到的显卡信息。</li>
+</ol>
+<p><strong>加速器对照（显存 + 计算单元）</strong>：Colab 用统一的 compute units 计费（约 <code>$0.10 / unit</code>）；越强的加速器，每小时扣的 units 越多。下表为社区实测快照，会随地区/时段波动，以连接后右上角实际烧点速率为准。</p>
+<table>
+<thead>
+<tr>
+<th>Colab 选项</th>
+<th>实际硬件</th>
+<th>显存/容量</th>
+<th>约 units/hr</th>
+<th>约 $/hr</th>
+<th>200 units 大约能连</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T4 GPU</td>
+<td>NVIDIA T4</td>
+<td>~15 GB</td>
+<td>1.19</td>
+<td>~$0.12</td>
+<td>~168h（~7 天）</td>
+</tr>
+<tr>
+<td>L4 GPU</td>
+<td>NVIDIA L4</td>
+<td>~22.5 GB</td>
+<td>1.71</td>
+<td>~$0.17</td>
+<td>~117h（~5 天）</td>
+</tr>
+<tr>
+<td>A100 GPU</td>
+<td>NVIDIA A100</td>
+<td>40 / 80 GB</td>
+<td>5.4 / 7.5</td>
+<td>~$0.54 / $0.75</td>
+<td>~37h / ~27h</td>
+</tr>
+<tr>
+<td>G4 GPU</td>
+<td>RTX PRO 6000 Blackwell</td>
+<td>~96 GB</td>
+<td>~8.7</td>
+<td>~$0.87</td>
+<td>~23h</td>
+</tr>
+<tr>
+<td>H100 GPU</td>
+<td>NVIDIA H100</td>
+<td>~80 GB</td>
+<td>~18</td>
+<td>~$1.80</td>
+<td>~11h</td>
+</tr>
+<tr>
+<td>v5e-1 TPU</td>
+<td>TPU v5e（1 chip）</td>
+<td>HBM（非 GPU）</td>
+<td>~3.1</td>
+<td>~$0.31</td>
+<td>~64h</td>
+</tr>
+<tr>
+<td>v6e-1 TPU</td>
+<td>TPU v6e（1 chip）</td>
+<td>HBM（非 GPU）</td>
+<td>~3.7</td>
+<td>~$0.37</td>
+<td>~54h</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>心算</strong>：<code>能用小时数 ≈ 持有 units ÷ 该加速器 units/hr</code>；<code>花费美元 ≈ 用掉的 units × 0.10</code>。例如连 G4 跑 5 小时 ≈ <code>5 × 8.7 ≈ 43.5 units</code> ≈ <strong>$4.4</strong>。A100 的 80GB 版本通常对应 High RAM；G4 在 <code>nvidia-smi</code> 里显示为 RTX PRO 6000。TPU 与 CUDA GPU 生态不同，适合 JAX / 部分 TensorFlow，不一定能直接替代 PyTorch CUDA 流程。</p>
+</blockquote>
+<h4>第六步：算力扣费机制与如何断开连接（避坑必看）</h4>
+<ul>
+<li><strong>扣费机制（按占用时长计费）</strong>：
+只要你的 Notebook 处于 <strong>「已连接」（Connected）</strong> 状态，哪怕你什么代码都没运行、只是开着网页发呆，系统也会按照当前硬件的速率（见上表）<strong>每分每秒持续扣除计算单元点数</strong>。这是因为云端显卡和内存已经被你独占锁定。单纯关闭浏览器标签页后台依然会继续连着扣费。</li>
+<li><strong>积分用完不会自动刷信用卡</strong>：余额归零后降回免费档限制，正在跑的付费运行时往往会被掐断；需要你手动再买 Pay As You Go，或等订阅下月赠送的 units。真正会按月自动扣卡的是 <strong>Pro / Pro+ 订阅续费</strong>（可在 <a href="https://payments.google.com">payments.google.com</a> 取消）。</li>
+<li><strong>如何断开连接（停止扣点）</strong>：
+<ul>
+<li><strong>方法一：手动断开释放（推荐）</strong>
+点击顶部菜单栏 <strong>「代码执行程序」</strong>（Runtime）-&gt; <strong>「断开连接并删除运行时」</strong>（Disconnect and delete runtime），或点击右上角 RAM/磁盘使用条旁边的下拉箭头选择断开。</li>
+<li><strong>方法二：代码跑完自动关机</strong>
+如果是晚上挂着跑长任务，可以在 Notebook 最后一个单元格加上：
+<pre><code class="language-python">from google.colab import runtime
+
+runtime.unassign()
+</code></pre>
+当所有代码执行完毕后，系统会自动断开并释放实例，防止多扣整夜点数。</li>
+</ul>
+</li>
+</ul>
+<h4>第七步：常用快捷键速查</h4>
+<table>
+<thead>
+<tr>
+<th>快捷键</th>
+<th>作用说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Shift + Enter</code></td>
+<td>运行当前单元格，并跳转到下一单元格</td>
+</tr>
+<tr>
+<td><code>Ctrl + Enter</code></td>
+<td>运行当前单元格，光标停留在原地</td>
+</tr>
+<tr>
+<td><code>Ctrl + M B</code></td>
+<td>在当前单元格下方插入新的代码块</td>
+</tr>
+<tr>
+<td><code>Ctrl + M D</code></td>
+<td>连续按两次 D 删除当前选中的单元格</td>
+</tr>
+<tr>
+<td><code>Ctrl + M M</code></td>
+<td>将当前代码块转换为 Markdown 文本块</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>2. 进阶与高级用法</h2>
+<p>当你跑通基础代码后，Colab 还提供了以下进阶能力，支持更复杂的开发与工程需求：</p>
+<ol>
+<li><strong>挂载 Google Drive 持久化存储</strong>：
+Colab 实例关闭后临时文件会被重置。运行 <code>from google.colab import drive; drive.mount('/content/drive')</code> 即可挂载个人云端硬盘，把训练数据集、持久化日志与模型权重保存在网盘中。</li>
+<li><strong>交互式表单控件（Form Fields）</strong>：
+通过添加 <code>#@param</code> 注释语法（如 <code>learning_rate = 0.01 #@param {type:&quot;slider&quot;, min:0.001, max:0.1, step:0.001}</code>），Notebook 界面会自动渲染出滑块、下拉选择框或颜色拾取器，无需写前端就能做交互式 Demo。</li>
+<li><strong>GitHub 双向联动</strong>：
+浏览器直接访问 <code>colab.research.google.com/github/&lt;用户名&gt;/&lt;仓库名&gt;/blob/main/&lt;文件&gt;.ipynb</code> 即可免克隆直接打开任何开源 Notebook；编辑完成后可在菜单栏选择「文件」-&gt;「在 GitHub 中保存副本」直接提交 commit。</li>
+<li><strong>终端与内网穿透（Remote Access &amp; Web UI）</strong>：
+可结合 <code>ngrok</code> 或 <code>cloudflared</code> 隧道，将 Colab 里运行的 Web 应用（如 Gradio、Streamlit、Stable Diffusion WebUI、ComfyUI）映射出公网链接访问；也可以通过 SSH 隧道使用本地 VS Code 远程连接 Colab 的计算节点进行编码。</li>
+<li><strong>算力升级与防闲置中断（Colab Pro / Compute Units）</strong>：
+免费版受限单次会话时长与空闲掉线机制。升级 Colab Pro/Pro+ 可购买算力点数（Compute Units），解锁后台持久运行、高内存模式以及 A100 / L4 / V100 等高性能显卡，支撑大语言模型微调与大批量任务。</li>
+</ol>
+
+
+    <footer>shared via <a href="https://yuler.github.io/share/">gh-share</a></footer>
+  </main>
+</body>
+</html>
