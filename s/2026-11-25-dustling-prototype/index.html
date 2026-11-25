@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Dustlight 拾光扫尘 · 核心闭环原型</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="phone">
+    <div class="statusbar"><span>9:41</span><span class="island"></span><span>100%</span></div>
+
+    <!-- 今日 -->
+    <section id="home" class="screen active">
+      <header class="home-head">
+        <p class="date" id="today-date"></p>
+        <h1>拾光扫尘</h1>
+        <p class="sub">把遗忘的影像拾起来，拂去多余的光尘</p>
+      </header>
+
+      <div class="today-card">
+        <div class="peek" id="peek"></div>
+        <p class="today-title" id="today-title">今日拾光 · 15 张</p>
+        <p class="today-hint" id="today-hint">从相册里随机拾起，约 1 分钟</p>
+        <button class="btn primary" id="start-btn">开始扫尘</button>
+      </div>
+
+      <div class="stats">
+        <div><b id="streak">6</b><span>连续天数</span></div>
+        <div><b id="last-freed">126 MB</b><span>上次释放</span></div>
+      </div>
+
+      <h2 class="section-title">整理模式</h2>
+      <ul class="modes">
+        <li class="mode on">🎲 随机拾光<span>今日可用</span></li>
+        <li class="mode locked" data-pro>📱 只看截图<span>Pro</span></li>
+        <li class="mode locked" data-pro>🎬 大体积视频<span>Pro</span></li>
+        <li class="mode locked" data-pro>🗓 往年今日<span>Pro</span></li>
+      </ul>
+    </section>
+
+    <!-- 滑卡 -->
+    <section id="swipe" class="screen">
+      <header class="swipe-head">
+        <button class="icon-btn" id="quit-btn" aria-label="退出">✕</button>
+        <div class="progress">
+          <span id="progress-text">1 / 15</span>
+          <div class="bar"><i id="progress-bar"></i></div>
+        </div>
+        <span class="bin-chip" id="bin-chip">尘筐 0</span>
+      </header>
+
+      <div class="deck" id="deck"></div>
+
+      <footer class="actions">
+        <button class="round sweep" id="sweep-btn" aria-label="扫尘">扫尘</button>
+        <button class="round undo" id="undo-btn" aria-label="撤销">↶</button>
+        <button class="round keep" id="keep-btn" aria-label="留光">留光</button>
+      </footer>
+      <p class="kbd-hint">← 扫尘 · → 留光 · ⌘Z 撤销</p>
+    </section>
+
+    <!-- 结算 -->
+    <section id="settle" class="screen">
+      <header class="settle-head">
+        <h1 id="settle-title">本轮结算</h1>
+        <p class="sub" id="settle-sub"></p>
+      </header>
+
+      <div class="grid" id="grid"></div>
+      <p class="empty" id="settle-empty" hidden>这一轮全部留光，没有需要拂去的照片 ✨</p>
+
+      <div class="done" id="done" hidden>
+        <p class="freed"><span id="freed-num">0</span> MB</p>
+        <p class="done-line" id="done-line"></p>
+      </div>
+
+      <footer class="settle-foot">
+        <p class="tip" id="settle-tip">点照片可移出尘筐 · 删除后仍在「最近删除」保留 30 天</p>
+        <button class="btn primary" id="settle-btn"></button>
+        <div class="done-actions" id="done-actions" hidden>
+          <button class="btn ghost" id="home-btn">回到今日</button>
+          <button class="btn primary" id="again-btn">再来一轮</button>
+        </div>
+      </footer>
+
+      <!-- 模拟系统确认框 -->
+      <div class="alert-mask" id="alert" hidden>
+        <div class="alert">
+          <p class="alert-title" id="alert-title"></p>
+          <p class="alert-body">这些照片将移至「最近删除」，30 天后永久删除。</p>
+          <div class="alert-btns">
+            <button id="alert-cancel">不允许</button>
+            <button id="alert-ok" class="danger">删除</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 付费墙 -->
+    <div class="sheet-mask" id="paywall" hidden>
+      <div class="sheet">
+        <div class="grabber"></div>
+        <p class="pw-badge">Dustlight Pro</p>
+        <h2 class="pw-title" id="pw-title">今日的拾光已用完</h2>
+        <p class="sub">解锁全部拾光，随时为相册拂尘</p>
+        <ul class="perks">
+          <li>无限轮次，想扫就扫</li>
+          <li>自定义每轮张数</li>
+          <li>截图 · 大视频 · 往年今日专项模式</li>
+          <li>累计释放统计与桌面小组件</li>
+        </ul>
+        <div class="plans">
+          <label class="plan"><input type="radio" name="plan" /><b>年费</b><span>¥18 / 年</span></label>
+          <label class="plan"><input type="radio" name="plan" checked /><b>终身买断</b><span>¥48</span><em>推荐</em></label>
+        </div>
+        <button class="btn primary" id="buy-btn">继续</button>
+        <button class="btn text" id="later-btn">以后再说</button>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" hidden></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
