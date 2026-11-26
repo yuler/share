@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>重力快门 · 手表原型</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --desk: #14110e;
+    --ink: #ece6dc;
+    --muted: #a3988c;
+    --gold: #e7c27a;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    min-height: 100%;
+    background: radial-gradient(ellipse at 50% 28%, #2a241c 0%, var(--desk) 55%);
+    color: var(--ink);
+    font-family: "Avenir Next", "PingFang SC", "Noto Sans CJK SC", "Source Han Sans SC", sans-serif;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 16px 48px;
+    gap: 18px;
+  }
+  h1 {
+    margin: 0;
+    font-weight: 600;
+    font-size: 28px;
+    letter-spacing: 0.28em;
+    text-indent: 0.28em;
+  }
+  .lead {
+    margin: 0;
+    max-width: 640px;
+    color: #ddd6cc;
+    font-size: 16px;
+    line-height: 1.6;
+    text-align: center;
+  }
+  .stage { display: flex; align-items: flex-start; gap: 28px; }
+  .device { display: flex; flex-direction: column; align-items: center; }
+  .pad {
+    display: grid;
+    grid-template-columns: 52px 292px 52px;
+    grid-template-rows: 44px 360px 44px;
+    align-items: center;
+    justify-items: center;
+  }
+  .pad button {
+    width: 44px;
+    height: 36px;
+    border: 0;
+    border-radius: 8px;
+    background: #2a261f;
+    color: var(--muted);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .pad button.on { color: #1a140c; background: var(--gold); }
+  .pad button.up { grid-column: 2; grid-row: 1; }
+  .pad button.left { grid-column: 1; grid-row: 2; }
+  .pad button.right { grid-column: 3; grid-row: 2; }
+  .pad button.down { grid-column: 2; grid-row: 3; }
+  .tilt-rig {
+    grid-column: 2;
+    grid-row: 2;
+    width: 292px;
+    height: 360px;
+    perspective: 520px;
+  }
+  .watch {
+    position: relative;
+    width: 292px;
+    height: 360px;
+    border-radius: 68px;
+    background: linear-gradient(160deg, #f2efe8 0%, #b7b2a8 28%, #6e6a64 62%, #3e3c39 100%);
+    box-shadow: 0 30px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.7), inset 0 -8px 16px rgba(0,0,0,.25);
+    transform-style: preserve-3d;
+  }
+  .watch.buzz { animation: buzz .42s linear; }
+  @keyframes buzz {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-4px); }
+    40% { transform: translateX(4px); }
+    60% { transform: translateX(-2px); }
+    80% { transform: translateX(2px); }
+  }
+  .screen {
+    position: absolute;
+    inset: 16px 18px 18px 16px;
+    border-radius: 52px;
+    overflow: hidden;
+    background: #050607;
+    box-shadow: inset 0 0 0 2px #0c0c0c;
+    cursor: pointer;
+    touch-action: none;
+  }
+  canvas { display: block; width: 100%; height: 100%; }
+  .crown, .side {
+    position: absolute;
+    right: -12px;
+    border-radius: 4px;
+  }
+  .crown {
+    top: 78px;
+    width: 16px;
+    height: 72px;
+    background: repeating-linear-gradient(to bottom, #f7f4ee 0 3px, #8d8880 3px 5px);
+    box-shadow: inset -2px 0 2px rgba(0,0,0,.35);
+  }
+  .side {
+    top: 176px;
+    width: 12px;
+    height: 42px;
+    background: linear-gradient(#d9d4cb, #7a756e);
+  }
+  .compass {
+    position: relative;
+    width: 112px;
+    height: 112px;
+    margin: 16px 0 0;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 50%, #3a332b 0 46%, transparent 47%),
+      #241f1a;
+    box-shadow: inset 0 0 0 3px #d5cfc3, 0 2px 6px rgba(0, 0, 0, 0.45);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+  }
+  .compass:active { cursor: grabbing; }
+  .rose i {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    color: #e7c27a;
+    font-style: normal;
+    font-size: 13px;
+    line-height: 16px;
+    text-align: center;
+    pointer-events: none;
+  }
+  .rose i:nth-child(1) { transform: translateY(-40px); }
+  .rose i:nth-child(2) { transform: translateX(40px); }
+  .rose i:nth-child(3) { transform: translateY(40px); }
+  .rose i:nth-child(4) { transform: translateX(-40px); }
+  .needle {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 4px;
+    height: 52px;
+    margin-left: -2px;
+    margin-top: -44px;
+    border-radius: 2px;
+    background: linear-gradient(#f6e2b0 0 58%, #6a5b42 58%);
+    transform-origin: 2px 44px;
+    pointer-events: none;
+  }
+  .needle.idle { opacity: 0.28; }
+  .compass::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    margin: -5px 0 0 -5px;
+    border-radius: 50%;
+    background: var(--gold);
+    pointer-events: none;
+  }
+  .compass-name {
+    margin: 6px 0 0;
+    color: #b7aa98;
+    font-size: 13px;
+    text-align: center;
+  }
+  .aside { width: 300px; }
+  .caption { margin: 0; font-size: 22px; line-height: 1.45; font-weight: 600; }
+  .sub { margin: 8px 0 0; color: #ddd6cc; font-size: 16px; line-height: 1.6; }
+  .path { margin: 14px 0 0; min-height: 1.4em; letter-spacing: 0.12em; color: var(--gold); }
+  .row { display: flex; gap: 10px; margin-top: 16px; }
+  .row button, .levels button {
+    border: 0;
+    background: #2a261f;
+    color: var(--ink);
+    font: inherit;
+    font-size: 14px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .levels {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    margin-top: 18px;
+  }
+  .levels button { padding: 6px 0; }
+  .levels button.on { background: var(--gold); color: #1a140c; }
+  .guide {
+    width: min(720px, 100%);
+    margin-top: 8px;
+    color: #ddd6cc;
+    font-size: 16px;
+    line-height: 1.65;
+  }
+  .guide h2 {
+    margin: 22px 0 8px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .guide ol, .guide ul { margin: 0; padding-left: 1.2em; }
+  .guide li { margin: 6px 0; }
+  .guide p { margin: 8px 0; }
+  .guide b { color: var(--gold); font-weight: 600; }
+  @media (max-width: 760px) {
+    .stage { flex-direction: column; }
+    .aside { width: min(360px, 100%); }
+  }
+</style>
+</head>
+<body>
+  <h1>重力快门</h1>
+  <p class="lead">表盘下面的罗盘可以拖到任意角度。表会跟着做一点立体倾斜，松手后东西沿这个角度滑下去。</p>
+  <div class="stage">
+    <div class="device">
+      <div class="pad" id="pad">
+        <button class="up" type="button" data-dir="上">上</button>
+        <button class="left" type="button" data-dir="左">左</button>
+        <div class="tilt-rig">
+          <div class="watch" id="watch">
+            <div class="screen" id="screen"><canvas id="view" width="396" height="484"></canvas></div>
+            <div class="crown"></div>
+            <div class="side"></div>
+          </div>
+        </div>
+        <button class="right" type="button" data-dir="右">右</button>
+        <button class="down" type="button" data-dir="下">下</button>
+      </div>
+      <div class="compass" id="compass" role="slider" aria-label="重力方向" aria-valuetext="未选定">
+        <div class="rose"><i>上</i><i>右</i><i>下</i><i>左</i></div>
+        <div class="needle idle" id="needle"></div>
+      </div>
+      <p class="compass-name">小幅拖动，角度不限</p>
+    </div>
+    <div class="aside">
+      <p class="caption" id="caption"></p>
+      <p class="sub" id="sub"></p>
+      <p class="path" id="path"></p>
+      <div class="row">
+        <button type="button" id="undo">退一步</button>
+        <button type="button" id="reset">重来</button>
+      </div>
+      <div class="levels" id="levels"></div>
+    </div>
+  </div>
+  <section class="guide">
+    <h2>这一页怎么玩</h2>
+    <ol>
+      <li>按住表盘下面的罗盘，小幅拖向任意角度。针停在哪，手表就朝哪边做一点立体倾斜。松手后弹珠沿这个角度滑；斜着撞上墙时，还会顺着墙继续滑。</li>
+      <li>也可以点手表四周的「上 / 下 / 左 / 右」，或按键盘方向键，再点表盘落下。</li>
+      <li>在表盘上直接滑动，等于侧过去并立刻落下。</li>
+      <li>走错了按「退一步」。想重头来按「重来」。过关后会自己进入下一关。</li>
+      <li>地址以 <b>#关卡号</b> 结尾，例如 <b>#7</b> 就是第 7 关。改数字就能跳关。</li>
+    </ol>
+    <h2>格子上是什么</h2>
+    <ul>
+      <li><b>圆点</b>是弹珠，你要把它送进门。</li>
+      <li><b>钥匙</b>画成一把小钥匙。弹珠滑过它就拿到了，拿到之后圆点上会多一道亮圈。</li>
+      <li><b>门</b>是一扇带钥匙孔的方块。没钥匙时它就是墙，弹珠会被挡住。有钥匙时门变亮，再滑上去就过关。</li>
+      <li><b>黑圆洞</b>碰上去这局就失败。</li>
+      <li><b>木色方块</b>是箱子，和弹珠一样会滑。它在更前面，所以先动。箱子掉进洞就消失，洞还在。</li>
+      <li><b>灰块</b>是墙。</li>
+    </ul>
+    <h2>戴在手腕上怎么操作</h2>
+    <p>这一页上的罗盘是给鼠标用的替身：拖它，等于把表侧向某一边。真手表不读罗盘，罗盘管的是你面对房间的哪一面，人一转身方向就乱了。</p>
+    <p>手表读的是重力：表盘的哪一条边更朝下。你把腕子侧过去，屏幕上先亮出箭头；确认了再点一下表盘，这一下才落下。腕子放平、看不出哪边更低时，点下去不会动。</p>
+    <p>左右翻腕最清楚。上下要在还能看见表盘的前提下再仰一点或垂一点，幅度比左右小，所以真机上会把「已经侧够」显示出来，避免你点的时候方向变了。</p>
+  </section>
+<script>
+const LEVELS = [
+  {
+    name: "直走",
+    par: 1,
+    grid: ["#####", "#MKD#", "#####"],
+    solution: ["右"],
+  },
+  {
+    name: "拐弯",
+    par: 2,
+    grid: ["#####", "#M..#", "#K.D#", "#####"],
+    solution: ["下", "右"],
+  },
+  {
+    name: "再拐",
+    par: 2,
+    grid: ["#####", "#.MK#", "#..D#", "#####"],
+    solution: ["右", "下"],
+  },
+  {
+    name: "前面是洞",
+    par: 2,
+    grid: ["######", "#M.H.#", "#K..D#", "######"],
+    solution: ["下", "右"],
+  },
+  {
+    name: "门挡住",
+    par: 3,
+    grid: ["######", "#M..D#", "#.K..#", "######"],
+    solution: ["下", "右", "上"],
+  },
+  {
+    name: "钥匙在下",
+    par: 3,
+    grid: ["#####", "#M.D#", "#..K#", "#####"],
+    solution: ["下", "右", "上"],
+  },
+  {
+    name: "别冲门",
+    par: 3,
+    grid: ["######", "#MH.D#", "#..K.#", "######"],
+    solution: ["下", "右", "上"],
+  },
+  {
+    name: "三折",
+    par: 3,
+    grid: ["######", "#M...#", "####.#", "#...K#", "#D...#", "######"],
+    solution: ["右", "下", "左"],
+  },
+  {
+    name: "先离开",
+    par: 4,
+    grid: ["######", "#..DM#", "#K...#", "######"],
+    solution: ["下", "左", "上", "右"],
+  },
+  {
+    name: "箱子挡路",
+    par: 4,
+    grid: ["######", "#M.C.#", "#K..D#", "######"],
+    solution: ["右", "下", "左", "右"],
+  },
+  {
+    name: "箱子落洞",
+    par: 4,
+    grid: ["######", "#M..C#", "#.H.D#", "#K...#", "######"],
+    solution: ["左", "下", "右", "上"],
+  },
+  {
+    name: "两只箱子",
+    par: 4,
+    grid: ["######", "#M.C.#", "#..C.#", "#K..D#", "######"],
+    solution: ["右", "下", "左", "右"],
+  },
+  {
+    name: "把箱子送开",
+    par: 4,
+    grid: ["#######", "#M....#", "#..C.H#", "#K...D#", "#######"],
+    solution: ["右", "左", "下", "右"],
+  },
+  {
+    name: "洞边停下",
+    par: 4,
+    grid: ["######", "#M..H#", "#..C.#", "#K..D#", "######"],
+    solution: ["下", "上", "右", "下"],
+  },
+  {
+    name: "绕开一格",
+    par: 5,
+    grid: ["######", "#MH..#", "#.#.K#", "#...D#", "######"],
+    solution: ["下", "右", "上", "右", "下"],
+  },
+  {
+    name: "贴着洞",
+    par: 5,
+    grid: ["######", "#M..H#", "#.#..#", "#..K.#", "#...D#", "######"],
+    solution: ["下", "右", "上", "下", "右"],
+  },
+  {
+    name: "钥匙在洞边",
+    par: 5,
+    grid: ["######", "#M..H#", "#..K.#", "#...D#", "######"],
+    solution: ["下", "右", "上", "下", "右"],
+  },
+  {
+    name: "绕一圈",
+    par: 5,
+    grid: ["#######", "#M....#", "#.###.#", "#..K..#", "#....D#", "#######"],
+    solution: ["右", "下", "左", "下", "右"],
+  },
+  {
+    name: "侧过去",
+    par: 5,
+    grid: ["########", "#M.....#", "#C.H.#.#", "#..#.K.#", "#....#D#", "#......#", "########"],
+    solution: ["右", "下", "左", "右", "下"],
+  },
+  {
+    name: "窄门",
+    par: 6,
+    grid: ["#######", "#M....#", "##.#.##", "#K.C.D#", "#######"],
+    solution: ["右", "上", "左", "下", "左", "右"],
+  },
+  {
+    name: "让开",
+    par: 6,
+    grid: ["########", "#...C.M#", "#K..H..#", "#..#..D#", "#......#", "########"],
+    solution: ["下", "上", "左", "下", "右", "上"],
+  },
+  {
+    name: "七步",
+    par: 7,
+    grid: ["######", "#D#..#", "#CK.H#", "#..M.#", "##.#.#", "######"],
+    solution: ["下", "左", "下", "右", "上", "左", "上"],
+  },
+  {
+    name: "箱子先走",
+    par: 8,
+    grid: ["########", "#M..C..#", "#.##.H.#", "#..K...#", "#.....D#", "########"],
+    solution: ["下", "右", "上", "右", "下", "左", "下", "右"],
+  },
+  {
+    name: "再送一次",
+    par: 8,
+    grid: ["########", "#C.K#..#", "#..DC.##", "#....M##", "###H..##", "########"],
+    solution: ["左", "下", "右", "下", "左", "上", "右", "下"],
+  },
+  {
+    name: "箱子两次",
+    par: 9,
+    grid: ["#######", "#M..C.#", "#..H..#", "#K.#.D#", "#######"],
+    solution: ["右", "下", "左", "上", "左", "下", "上", "右", "下"],
+  },
+  {
+    name: "九步",
+    par: 9,
+    grid: ["######", "#C.K.#", "#CH.##", "#.##D#", "#..M.#", "######"],
+    solution: ["左", "上", "右", "上", "右", "左", "下", "右", "上"],
+  },
+  {
+    name: "十步",
+    par: 10,
+    grid: ["#######", "#...M.#", "#.#...#", "#..##.#", "#...H.#", "#CKD#.#", "#######"],
+    solution: ["上", "右", "下", "右", "下", "左", "上", "左", "下", "右"],
+  },
+  {
+    name: "十一",
+    par: 11,
+    grid: ["#######", "#KC.#D#", "###..M#", "#.....#", "#H..#.#", "#.....#", "#######"],
+    solution: ["右", "下", "右", "上", "左", "上", "左", "右", "下", "右", "上"],
+  },
+  {
+    name: "十二",
+    par: 12,
+    grid: ["########", "#.#C...#", "#....#.#", "#...DKC#", "#M#.H#.#", "########"],
+    solution: ["上", "左", "下", "左", "上", "右", "上", "右", "下", "右", "下", "左"],
+  },
+  {
+    name: "十四",
+    par: 14,
+    grid: ["######", "#D.HM#", "#K...#", "#C.#.#", "#.C#.#", "######"],
+    solution: ["右", "下", "左", "上", "右", "下", "左", "上", "右", "下", "右", "上", "左", "上"],
+  },
+];
+
+const DIRS = { 上: [0, -1], 下: [0, 1], 左: [-1, 0], 右: [1, 0] };
+
+const canvas = document.getElementById("view");
+const ctx = canvas.getContext("2d");
+const watch = document.getElementById("watch");
+const screen = document.getElementById("screen");
+const caption = document.getElementById("caption");
+const sub = document.getElementById("sub");
+const pathEl = document.getElementById("path");
+
+let levelIndex = 0;
+let level = null;
+let state = null;
+let lean = null;
+let leanAmount = 1;
+let moves = [];
+let history = [];
+let busy = false;
+let mode = "play";
+let advanceTimer = 0;
+let needleAngle = 0;
+let kicking = false;
+let kickId = 0;
+let compassDrag = null;
+const compass = document.getElementById("compass");
+const needle = document.getElementById("needle");
+
+function parse(grid) {
+  const walls = new Set();
+  const holes = new Set();
+  const crates = [];
+  let mx = 0, my = 0, key = "", door = "";
+  const H = grid.length;
+  const W = grid[0].length;
+  grid.forEach((row, y) => {
+    [...row].forEach((c, x) => {
+      const id = x + "," + y;
+      if (c === "#") walls.add(id);
+      else if (c === "H") holes.add(id);
+      else if (c === "M") { mx = x; my = y; }
+      else if (c === "K") key = id;
+      else if (c === "D") door = id;
+      else if (c === "C") crates.push(id);
+    });
+  });
+  return {
+    level: { W, H, walls, holes, key, door },
+    state: { mx, my, has: false, crates },
+  };
+}
+
+function circleHitsRect(cx, cy, r, x0, y0, x1, y1) {
+  const nx = Math.max(x0, Math.min(cx, x1));
+  const ny = Math.max(y0, Math.min(cy, y1));
+  const dx = cx - nx;
+  const dy = cy - ny;
+  return dx * dx + dy * dy < r * r;
+}
+
+function tiltAnalog(lv, st, gx, gy) {
+  const len = Math.hypot(gx, gy) || 1;
+  gx /= len;
+  gy /= len;
+  let mx = st.mx + 0.5;
+  let my = st.my + 0.5;
+  let has = st.has;
+  const crates = st.crates.map((id) => {
+    const [x, y] = id.split(",").map(Number);
+    return { x: x + 0.5, y: y + 0.5, alive: true };
+  });
+  const plugs = new Set();
+  const frames = [];
+  const R = 0.4;
+  const STEP = 0.2;
+
+  function hitsSolid(x, y, doorIsWall) {
+    const x0 = Math.floor(x - R) - 1;
+    const x1 = Math.floor(x + R) + 1;
+    const y0 = Math.floor(y - R) - 1;
+    const y1 = Math.floor(y + R) + 1;
+    for (let cy = y0; cy <= y1; cy++) {
+      for (let cx = x0; cx <= x1; cx++) {
+        const outside = cx < 0 || cy < 0 || cx >= lv.W || cy >= lv.H;
+        const id = cx + "," + cy;
+        const wall = outside || lv.walls.has(id) || (doorIsWall && id === lv.door);
+        if (wall && circleHitsRect(x, y, R, cx, cy, cx + 1, cy + 1)) return true;
+      }
+    }
+    return false;
+  }
+
+  function hitsCrate(x, y, skip) {
+    for (let i = 0; i < crates.length; i++) {
+      const c = crates[i];
+      if (!c.alive || i === skip) continue;
+      if (Math.hypot(c.x - x, c.y - y) < R * 2) return true;
+    }
+    return false;
+  }
+
+  function hitsMarble(x, y) {
+    return Math.hypot(mx - x, my - y) < R * 2;
+  }
+
+  function pushFrame(fall) {
+    const alive = crates.filter((c) => c.alive);
+    frames.push({
+      mx: mx - 0.5,
+      my: my - 0.5,
+      has,
+      crates: alive.map((c) => Math.floor(c.x) + "," + Math.floor(c.y)),
+      cratePos: alive.map((c) => ({ x: c.x - 0.5, y: c.y - 0.5 })),
+      fall: !!fall,
+    });
+  }
+
+  function settled() {
+    const clamp = (v, max) => Math.max(0, Math.min(max - 1, Math.floor(v)));
+    return {
+      mx: clamp(mx, lv.W),
+      my: clamp(my, lv.H),
+      has,
+      crates: crates.filter((c) => c.alive).map((c) => clamp(c.x, lv.W) + "," + clamp(c.y, lv.H)),
+    };
+  }
+
+  let guard = 0;
+  while (guard++ < 800) {
+    const order = [{ kind: "m", x: mx, y: my }];
+    crates.forEach((c, i) => { if (c.alive) order.push({ kind: "c", i, x: c.x, y: c.y }); });
+    order.sort((a, b) => (b.x * gx + b.y * gy) - (a.x * gx + a.y * gy));
+    let moved = false;
+    for (const item of order) {
+      if (item.kind === "m") {
+        const nx = mx + gx * STEP;
+        if (!hitsSolid(nx, my, !has) && !hitsCrate(nx, my, -1)) { mx = nx; moved = true; }
+        const ny = my + gy * STEP;
+        if (!hitsSolid(mx, ny, !has) && !hitsCrate(mx, ny, -1)) { my = ny; moved = true; }
+        const id = Math.floor(mx) + "," + Math.floor(my);
+        if (id === lv.key) has = true;
+        if (lv.holes.has(id) && !plugs.has(id)) {
+          pushFrame(true);
+          return { dead: true, win: false, frames, state: settled() };
+        }
+        if (id === lv.door && has) {
+          pushFrame(false);
+          return { dead: false, win: true, frames, state: settled() };
+        }
+      } else {
+        const c = crates[item.i];
+        if (!c.alive) continue;
+        const nx = c.x + gx * STEP;
+        if (!hitsSolid(nx, c.y, true) && !hitsCrate(nx, c.y, item.i) && !hitsMarble(nx, c.y)) {
+          c.x = nx;
+          moved = true;
+        }
+        const ny = c.y + gy * STEP;
+        if (!hitsSolid(c.x, ny, true) && !hitsCrate(c.x, ny, item.i) && !hitsMarble(c.x, ny)) {
+          c.y = ny;
+          moved = true;
+        }
+        const id = Math.floor(c.x) + "," + Math.floor(c.y);
+        if (lv.holes.has(id) && !plugs.has(id)) {
+          plugs.add(id);
+          c.alive = false;
+          moved = true;
+        }
+      }
+    }
+    if (moved && guard % 3 === 0) pushFrame(false);
+    if (!moved) break;
+  }
+  pushFrame(false);
+  return { dead: false, win: false, frames, state: settled() };
+}
+
+function tilt(lv, st, dir) {
+  if (typeof dir === "number") {
+    const rad = dir * Math.PI / 180;
+    let gx = Math.cos(rad);
+    let gy = Math.sin(rad);
+    if (Math.abs(gx) < 0.07) gx = 0;
+    if (Math.abs(gy) < 0.07) gy = 0;
+    if (gx === 0 && gy < 0) dir = "上";
+    else if (gx === 0 && gy > 0) dir = "下";
+    else if (gy === 0 && gx > 0) dir = "右";
+    else if (gy === 0 && gx < 0) dir = "左";
+    else return tiltAnalog(lv, st, gx, gy);
+  }
+  const [dx, dy] = DIRS[dir];
+  let mx = st.mx, my = st.my, has = st.has;
+  const crates = new Set(st.crates);
+  const plugs = new Set();
+  const frames = [];
+  const snap = (fall) => frames.push({
+    mx, my, has, crates: [...crates], plugs: [...plugs], fall: !!fall,
+  });
+  let guard = 0;
+  while (guard++ < 40) {
+    const mobiles = [["m", mx, my, ""]];
+    [...crates].sort().forEach((id) => {
+      const [x, y] = id.split(",").map(Number);
+      mobiles.push(["c", x, y, id]);
+    });
+    mobiles.sort((a, b) => (b[1] * dx + b[2] * dy) - (a[1] * dx + a[2] * dy));
+    let moved = false;
+    for (const item of mobiles) {
+      const kind = item[0];
+      const px = item[1];
+      const py = item[2];
+      const nx = px + dx;
+      const ny = py + dy;
+      if (nx < 0 || ny < 0 || nx >= lv.W || ny >= lv.H) continue;
+      const nk = nx + "," + ny;
+      const solid = lv.walls.has(nk)
+        || (nk === lv.door && !has)
+        || crates.has(nk)
+        || (nx === mx && ny === my);
+      const hole = lv.holes.has(nk) && !plugs.has(nk);
+      if (kind === "m") {
+        if (hole) {
+          mx = nx; my = ny;
+          snap(true);
+          return { dead: true, win: false, frames, state: { mx, my, has, crates: [...crates] } };
+        }
+        if (solid) continue;
+        mx = nx; my = ny;
+        if (nk === lv.key) has = true;
+        moved = true;
+        if (nk === lv.door && has) {
+          snap(false);
+          return { dead: false, win: true, frames, state: { mx, my, has, crates: [...crates] } };
+        }
+      } else {
+        const id = item[3];
+        if (!crates.has(id)) continue;
+        if (hole) {
+          crates.delete(id);
+          plugs.add(nk);
+          moved = true;
+          continue;
+        }
+        if (solid) continue;
+        crates.delete(id);
+        crates.add(nk);
+        moved = true;
+      }
+    }
+    if (!moved) break;
+    snap(false);
+  }
+  return {
+    dead: false,
+    win: false,
+    frames,
+    state: { mx, my, has, crates: [...crates] },
+  };
+}
+
+function cellSize() {
+  const pad = 36;
+  const maxW = 396 - pad * 2;
+  const maxH = 484 - pad * 2;
+  return Math.floor(Math.min(maxW / level.W, maxH / level.H));
+}
+
+function origin(size) {
+  return {
+    x: (396 - size * level.W) / 2,
+    y: (484 - size * level.H) / 2 + 8,
+  };
+}
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function draw(view) {
+  const size = cellSize();
+  const o = origin(size);
+  ctx.clearRect(0, 0, 396, 484);
+  ctx.fillStyle = "#100e0c";
+  ctx.fillRect(0, 0, 396, 484);
+
+  const crates = new Set(view.crates);
+  for (let y = 0; y < level.H; y++) {
+    for (let x = 0; x < level.W; x++) {
+      const id = x + "," + y;
+      const px = o.x + x * size;
+      const py = o.y + y * size;
+      if (level.walls.has(id)) {
+        ctx.fillStyle = "#3c362e";
+        ctx.fillRect(px, py, size, size);
+        continue;
+      }
+      ctx.fillStyle = "#1a1714";
+      ctx.fillRect(px + 1, py + 1, size - 2, size - 2);
+      if (level.holes.has(id)) {
+        const g = ctx.createRadialGradient(px + size / 2, py + size / 2, 2, px + size / 2, py + size / 2, size * 0.42);
+        g.addColorStop(0, "#000");
+        g.addColorStop(1, "#2a2118");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(px + size / 2, py + size / 2, size * 0.34, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (id === level.door) {
+        ctx.fillStyle = view.has ? "#d7b56a" : "#6d6458";
+        roundRect(px + size * 0.22, py + size * 0.12, size * 0.56, size * 0.76, 4);
+        ctx.fill();
+        ctx.fillStyle = view.has ? "#1a140c" : "#1a1714";
+        ctx.beginPath();
+        ctx.arc(px + size * 0.5, py + size * 0.48, size * 0.08, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (id === level.key && !view.has) {
+        ctx.strokeStyle = "#e7c27a";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(px + size * 0.42, py + size * 0.4, size * 0.12, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(px + size * 0.52, py + size * 0.48);
+        ctx.lineTo(px + size * 0.72, py + size * 0.68);
+        ctx.moveTo(px + size * 0.62, py + size * 0.6);
+        ctx.lineTo(px + size * 0.7, py + size * 0.56);
+        ctx.stroke();
+      }
+      if (!view.cratePos && crates.has(id)) {
+        ctx.fillStyle = "#8b5a32";
+        roundRect(px + size * 0.18, py + size * 0.18, size * 0.64, size * 0.64, 3);
+        ctx.fill();
+      }
+    }
+  }
+  if (view.cratePos) {
+    view.cratePos.forEach((c) => {
+      const px = o.x + c.x * size;
+      const py = o.y + c.y * size;
+      ctx.fillStyle = "#8b5a32";
+      roundRect(px + size * 0.18, py + size * 0.18, size * 0.64, size * 0.64, 3);
+      ctx.fill();
+    });
+  }
+
+  const mx = o.x + view.mx * size + size / 2;
+  const my = o.y + view.my * size + size / 2;
+  ctx.fillStyle = view.fall ? "#5c4a32" : "#e7c27a";
+  ctx.beginPath();
+  ctx.arc(mx, my, size * (view.fall ? 0.16 : 0.28), 0, Math.PI * 2);
+  ctx.fill();
+  if (view.has && !view.fall) {
+    ctx.strokeStyle = "#fff4d2";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(mx, my, size * 0.16, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+function say(main, extra) {
+  caption.textContent = main;
+  sub.textContent = extra || "";
+  pathEl.textContent = moves.length ? moves.join(" ") : "";
+}
+
+function angleOf(dir) {
+  if (dir === "上") return -90;
+  if (dir === "下") return 90;
+  if (dir === "左") return 180;
+  if (dir === "右") return 0;
+  return dir;
+}
+
+function angleGap(a, b) {
+  let d = Math.abs(a - b) % 360;
+  if (d > 180) d = 360 - d;
+  return d;
+}
+
+function labelOf(angle) {
+  const a = ((angle % 360) + 360) % 360;
+  const cards = [[0, "右"], [90, "下"], [180, "左"], [270, "上"]];
+  let name = "右";
+  let signed = 0;
+  let best = 999;
+  cards.forEach(([deg, n]) => {
+    let d = a - deg;
+    if (d > 180) d -= 360;
+    if (d < -180) d += 360;
+    if (Math.abs(d) < best) {
+      best = Math.abs(d);
+      name = n;
+      signed = d;
+    }
+  });
+  if (best < 4) return name;
+  const rounded = Math.round(signed);
+  return name + (rounded > 0 ? "+" : "") + rounded + "°";
+}
+
+function paintButtons() {
+  document.querySelectorAll(".pad button").forEach((b) => {
+    const on = lean != null && angleGap(lean, angleOf(b.dataset.dir)) < 8;
+    b.classList.toggle("on", on);
+  });
+  applyWatchTilt(lean, leanAmount);
+  pointNeedle(lean, false);
+  compass.setAttribute("aria-valuetext", lean == null ? "未选定" : labelOf(lean));
+}
+
+function statusLine() {
+  const head = "第 " + (levelIndex + 1) + " 关 · " + LEVELS[levelIndex].name;
+  if (mode === "won") return head + "。过了，用了 " + moves.length + " 步。";
+  if (mode === "dead") return head + "。弹珠进洞了。";
+  if (lean == null) return head + "。拖下面的罗盘，角度不限。";
+  if (compassDrag) return head + "。重力朝" + labelOf(lean) + "，松手落下。";
+  return head + "。手腕朝" + labelOf(lean) + "，点表盘落下。";
+}
+
+function render() {
+  draw(state);
+  paintButtons();
+  if (mode === "won") {
+    const last = levelIndex >= LEVELS.length - 1;
+    say(statusLine(), last ? "这是最后一关。" : "最短 " + LEVELS[levelIndex].par + " 步。马上进入下一关。");
+  } else if (mode === "dead") {
+    say(statusLine(), "退一步回到落下之前，或整关重来。");
+  } else {
+    say(statusLine(), "已用 " + moves.length + " 步，最短 " + LEVELS[levelIndex].par + " 步。");
+  }
+}
+
+function levelFromHash() {
+  const n = Number(String(location.hash || "").replace("#", ""));
+  if (n >= 1 && n <= LEVELS.length) return n - 1;
+  return 0;
+}
+
+function loadLevel(i) {
+  clearTimeout(advanceTimer);
+  kickId += 1;
+  kicking = false;
+  compassDrag = null;
+  levelIndex = i;
+  const parsed = parse(LEVELS[i].grid);
+  level = parsed.level;
+  state = parsed.state;
+  moves = [];
+  history = [];
+  lean = null;
+  leanAmount = 1;
+  mode = "play";
+  busy = false;
+  const hash = "#" + (i + 1);
+  if (location.hash !== hash) location.hash = hash;
+  document.querySelectorAll(".levels button").forEach((b, n) => b.classList.toggle("on", n === i));
+  render();
+}
+
+function pointNeedle(angle, kick) {
+  if (kicking && !kick) return;
+  needle.classList.toggle("idle", angle == null);
+  if (angle == null) return;
+  const target = angle + 90;
+  if (compassDrag && !kick) {
+    needle.style.transition = "none";
+    needle.style.transform = "rotate(" + target + "deg)";
+    needleAngle = target;
+    return;
+  }
+  let next = target;
+  while (next < needleAngle - 180) next += 360;
+  while (next > needleAngle + 180) next -= 360;
+  needleAngle = next;
+  if (kick) {
+    kicking = true;
+    const id = ++kickId;
+    needle.style.transition = "transform .16s ease-out";
+    needle.style.transform = "rotate(" + (next + 16) + "deg)";
+    setTimeout(() => {
+      if (id !== kickId) return;
+      needle.style.transition = "transform .28s cubic-bezier(.15, .7, .2, 1)";
+      needle.style.transform = "rotate(" + next + "deg)";
+      setTimeout(() => { if (id === kickId) kicking = false; }, 280);
+    }, 160);
+    return;
+  }
+  needle.style.transition = "transform .16s ease-out";
+  needle.style.transform = "rotate(" + next + "deg)";
+}
+
+function applyWatchTilt(angle, amount) {
+  if (watch.classList.contains("buzz")) return;
+  if (angle == null) {
+    watch.style.transition = "transform .2s ease";
+    watch.style.transform = "rotateX(0deg) rotateY(0deg)";
+    return;
+  }
+  const mag = 24 * (amount == null ? 1 : amount);
+  const rad = angle * Math.PI / 180;
+  const pitch = Math.sin(rad) * mag;
+  const roll = Math.cos(rad) * mag;
+  watch.style.transition = compassDrag ? "none" : "transform .16s ease";
+  watch.style.transform = "rotateX(" + (-pitch).toFixed(2) + "deg) rotateY(" + roll.toFixed(2) + "deg)";
+}
+
+function sampleCompass(clientX, clientY) {
+  const r = compass.getBoundingClientRect();
+  const dx = clientX - (r.left + r.width / 2);
+  const dy = clientY - (r.top + r.height / 2);
+  const dist = Math.hypot(dx, dy);
+  if (dist < 6) return null;
+  return {
+    angle: Math.atan2(dy, dx) * 180 / Math.PI,
+    amount: Math.min(1, (dist - 6) / 22),
+  };
+}
+
+function leanTo(dir, amount) {
+  if (busy || mode !== "play") return;
+  lean = angleOf(dir);
+  leanAmount = amount == null ? 1 : amount;
+  render();
+}
+
+function commit(dir) {
+  if (busy || mode !== "play") return;
+  const use = dir == null ? lean : angleOf(dir);
+  if (use == null || Number.isNaN(use)) {
+    say("还没侧手腕。", "先拖下面的罗盘，或点表旁边的上、下、左、右。");
+    return;
+  }
+  lean = use;
+  if (dir == null || typeof dir !== "number") leanAmount = 1;
+  paintButtons();
+  const before = { mx: state.mx, my: state.my, has: state.has, crates: [...state.crates] };
+  const result = tilt(level, state, use);
+  const same = !result.dead && !result.win
+    && result.state.mx === before.mx && result.state.my === before.my
+    && result.state.has === before.has
+    && result.state.crates.join() === before.crates.join();
+  if (same) {
+    say("这一侧没有东西动。", "滑到底之前撞上了墙，或关着的门。");
+    paintButtons();
+    return;
+  }
+  history.push(before);
+  moves.push(labelOf(use));
+  busy = true;
+  pointNeedle(use, true);
+  const frames = result.frames.length ? result.frames : [result.state];
+  let i = 0;
+  const step = () => {
+    state = frames[i];
+    draw(state);
+    i += 1;
+    if (i < frames.length) {
+      setTimeout(step, 70);
+      return;
+    }
+    state = result.state;
+    busy = false;
+    if (result.dead) {
+      mode = "dead";
+      watch.classList.remove("buzz");
+      void watch.offsetWidth;
+      watch.classList.add("buzz");
+    } else if (result.win) {
+      mode = "won";
+      if (levelIndex < LEVELS.length - 1) {
+        advanceTimer = setTimeout(() => loadLevel(levelIndex + 1), 900);
+      }
+    }
+    render();
+  };
+  step();
+}
+
+compass.addEventListener("pointerdown", (e) => {
+  if (busy || mode !== "play") return;
+  compass.setPointerCapture(e.pointerId);
+  const sample = sampleCompass(e.clientX, e.clientY);
+  compassDrag = { sample, moved: false };
+  if (sample) leanTo(sample.angle, sample.amount);
+});
+compass.addEventListener("pointermove", (e) => {
+  if (!compassDrag) return;
+  const sample = sampleCompass(e.clientX, e.clientY);
+  if (!sample) return;
+  compassDrag.moved = true;
+  compassDrag.sample = sample;
+  leanTo(sample.angle, sample.amount);
+});
+compass.addEventListener("pointerup", () => {
+  if (!compassDrag) return;
+  const drag = compassDrag;
+  compassDrag = null;
+  if (!drag.moved || !drag.sample) return;
+  leanAmount = Math.max(drag.sample.amount, 0.7);
+  commit(drag.sample.angle);
+});
+compass.addEventListener("pointercancel", () => { compassDrag = null; });
+
+document.getElementById("pad").addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  leanTo(btn.dataset.dir);
+});
+
+let pointer = null;
+let swallowClick = false;
+screen.addEventListener("pointerdown", (e) => {
+  pointer = { x: e.clientX, y: e.clientY };
+});
+screen.addEventListener("pointerup", (e) => {
+  if (!pointer) return;
+  const dx = e.clientX - pointer.x;
+  const dy = e.clientY - pointer.y;
+  pointer = null;
+  if (Math.hypot(dx, dy) < 28) return;
+  swallowClick = true;
+  commit(Math.atan2(dy, dx) * 180 / Math.PI);
+});
+screen.addEventListener("click", (e) => {
+  if (swallowClick) {
+    swallowClick = false;
+    e.stopPropagation();
+    return;
+  }
+  commit();
+}, true);
+
+window.addEventListener("keydown", (e) => {
+  const map = { ArrowUp: "上", ArrowDown: "下", ArrowLeft: "左", ArrowRight: "右" };
+  if (map[e.key]) {
+    e.preventDefault();
+    leanTo(map[e.key]);
+  } else if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    commit();
+  } else if (e.key === "Backspace") {
+    e.preventDefault();
+    undo();
+  }
+});
+
+function undo() {
+  if (busy || !history.length) return;
+  clearTimeout(advanceTimer);
+  state = history.pop();
+  moves.pop();
+  mode = "play";
+  render();
+}
+
+function reset() {
+  if (busy) return;
+  loadLevel(levelIndex);
+}
+
+document.getElementById("undo").addEventListener("click", undo);
+document.getElementById("reset").addEventListener("click", reset);
+
+const levelsEl = document.getElementById("levels");
+LEVELS.forEach((lv, i) => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = String(i + 1);
+  b.title = lv.name;
+  b.addEventListener("click", () => { if (!busy) loadLevel(i); });
+  levelsEl.appendChild(b);
+});
+
+function runSolution(index, steps) {
+  const parsed = parse(LEVELS[index].grid);
+  let st = parsed.state;
+  for (let i = 0; i < steps.length; i++) {
+    const result = tilt(parsed.level, st, steps[i]);
+    if (result.dead) return "dead at " + steps[i];
+    if (result.win) return i === steps.length - 1 ? "win" : "early";
+    st = result.state;
+  }
+  return "stopped";
+}
+
+window.__ok = LEVELS.map((lv, i) => runSolution(i, lv.solution));
+if (window.__ok.some((r) => r !== "win")) {
+  caption.textContent = "关卡数据对不上";
+}
+
+window.addEventListener("hashchange", () => {
+  const i = levelFromHash();
+  if (i !== levelIndex) loadLevel(i);
+});
+
+loadLevel(levelFromHash());
+</script>
+</body>
+</html>
